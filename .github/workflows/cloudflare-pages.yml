@@ -1,0 +1,124 @@
+name: Cloudflare Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: web-chat-cloudflare-pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_PAGES_PROJECT_NAME: ${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME }}
+      CLOUDFLARE_PAGES_CUSTOM_DOMAIN: ${{ vars.CLOUDFLARE_PAGES_CUSTOM_DOMAIN }}
+      VITE_API_BASE: ${{ vars.VITE_API_BASE }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/chat-web/package-lock.json
+
+      - name: Validate Pages configuration
+        run: |
+          if [ -z "$CLOUDFLARE_PAGES_PROJECT_NAME" ]; then
+            echo "Missing CLOUDFLARE_PAGES_PROJECT_NAME repository variable"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        working-directory: apps/chat-web
+        run: npm ci
+
+      - name: Build app
+        working-directory: apps/chat-web
+        run: npm run build
+
+      - name: Ensure Cloudflare Pages project exists
+        env:
+          PROJECT_NAME: ${{ env.CLOUDFLARE_PAGES_PROJECT_NAME }}
+          PRODUCTION_BRANCH: main
+        run: |
+          PROJECT_ENDPOINT="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$PROJECT_NAME"
+          COMMON_HEADERS=(
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+            -H "Content-Type: application/json"
+          )
+
+          PROJECT_STATUS=$(curl -sS -o project-response.json -w "%{http_code}" \
+            "$PROJECT_ENDPOINT" \
+            "${COMMON_HEADERS[@]}")
+
+          if [ "$PROJECT_STATUS" = "404" ]; then
+            curl -sS --fail-with-body \
+              -X POST \
+              "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects" \
+              "${COMMON_HEADERS[@]}" \
+              --data "{\"name\":\"$PROJECT_NAME\",\"production_branch\":\"$PRODUCTION_BRANCH\"}"
+          elif [ "$PROJECT_STATUS" != "200" ]; then
+            cat project-response.json
+            exit 1
+          fi
+
+          curl -sS --fail-with-body \
+            -X PATCH \
+            "$PROJECT_ENDPOINT" \
+            "${COMMON_HEADERS[@]}" \
+            --data "{\"production_branch\":\"$PRODUCTION_BRANCH\"}"
+
+      - name: Ensure custom domain is attached
+        if: ${{ env.CLOUDFLARE_PAGES_CUSTOM_DOMAIN != '' }}
+        env:
+          PROJECT_NAME: ${{ env.CLOUDFLARE_PAGES_PROJECT_NAME }}
+          DOMAIN_NAME: ${{ env.CLOUDFLARE_PAGES_CUSTOM_DOMAIN }}
+        run: |
+          COMMON_HEADERS=(
+            -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+            -H "Content-Type: application/json"
+          )
+          DOMAIN_ENDPOINT="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$PROJECT_NAME/domains/$DOMAIN_NAME"
+          DOMAINS_ENDPOINT="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$PROJECT_NAME/domains"
+
+          DOMAIN_STATUS=$(curl -sS -o domain-response.json -w "%{http_code}" \
+            "$DOMAIN_ENDPOINT" \
+            "${COMMON_HEADERS[@]}")
+
+          if [ "$DOMAIN_STATUS" = "200" ]; then
+            exit 0
+          fi
+
+          if [ "$DOMAIN_STATUS" != "404" ]; then
+            cat domain-response.json
+            exit 1
+          fi
+
+          curl -sS --fail-with-body \
+            -X POST \
+            "$DOMAINS_ENDPOINT" \
+            "${COMMON_HEADERS[@]}" \
+            --data "{\"name\":\"$DOMAIN_NAME\"}"
+
+      - name: Deploy to Cloudflare Pages
+        env:
+          PROJECT_NAME: ${{ env.CLOUDFLARE_PAGES_PROJECT_NAME }}
+          CF_PAGES_COMMIT_MESSAGE: ${{ github.event.head_commit.message || github.sha }}
+        run: |
+          npx wrangler pages deploy apps/chat-web/dist \
+            --project-name="$PROJECT_NAME" \
+            --branch="${{ github.ref_name }}" \
+            --commit-hash="${{ github.sha }}" \
+            --commit-message="$CF_PAGES_COMMIT_MESSAGE"
