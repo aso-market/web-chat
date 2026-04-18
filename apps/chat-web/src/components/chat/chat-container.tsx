@@ -415,7 +415,7 @@ export function ChatContainer(props: ChatContainerProps) {
     props.backgroundOverride ||
     themeBackground ||
     visualProjectConfig?.backgroundColor ||
-    tokens.shellBg;
+    AI_CHAT_THEMES[themeName].shellBg;
 
   useEffect(() => {
     const previousBodyBackground = document.body.style.background;
