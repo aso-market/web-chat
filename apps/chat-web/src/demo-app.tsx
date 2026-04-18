@@ -7,6 +7,7 @@ const themeOrder: AIChatThemeName[] = [
   "emerald-night",
   "crimson-carbon",
   "amber-obsidian",
+  "qickcash-dark",
 ];
 
 const DEMO_CONVERSATIONS: Record<AIChatThemeName, string> = {
@@ -15,6 +16,7 @@ const DEMO_CONVERSATIONS: Record<AIChatThemeName, string> = {
   "emerald-night": "demo-emerald-night",
   "crimson-carbon": "demo-crimson-carbon",
   "amber-obsidian": "demo-amber-obsidian",
+  "qickcash-dark": "demo-qickcash-dark",
 };
 
 function ThemeCard({
@@ -78,10 +80,10 @@ export function DemoApp() {
         </h2>
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
           <ThemeCard
-            theme="emerald-night"
+            theme="qickcash-dark"
             apiBase={apiBase}
             layout="plain"
-            label="emerald-night / plain"
+            label="qickcash-dark / plain"
           />
         </div>
       </div>

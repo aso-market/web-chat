@@ -77,7 +77,7 @@ npm run preview
 - `customerId` — Идентификатор пользователя
 - `conversationId` — ID диалога
 - `apiBase` — URL API
-- `theme` — Название темы (neon-blue, violet-noir, emerald-night, crimson-carbon, amber-obsidian)
+- `theme` — Название темы (neon-blue, violet-noir, emerald-night, crimson-carbon, amber-obsidian, qickcash-dark)
 - `title`, `subtitle`, `welcomeText`, `placeholder` — Текстовые переопределения
 - `themePrimary` — Основной цвет
 - `themeButtonColor` — Цвет кнопки отправки
@@ -88,7 +88,7 @@ npm run preview
 - `themeHeaderColor` — Цвет заголовка
 
 ### Демонстрация тем
-Используйте `demo.html` для просмотра всех 5 тем рядом с живыми примерами.
+Используйте `demo.html` для просмотра всех 6 тем рядом с живыми примерами.
 
 **Доступные темы:**
 1. `neon-blue` — Синий акцент с современным свечением
@@ -96,6 +96,7 @@ npm run preview
 3. `emerald-night` — Зеленый акцент с темным фоном
 4. `crimson-carbon` — Красный/розовый индустриальный стиль
 5. `amber-obsidian` — Оранжевые/янтарные теплые тона
+6. `qickcash-dark` — Темная фирменная тема в стилистике QickCash
 
 ## Архитектура
 

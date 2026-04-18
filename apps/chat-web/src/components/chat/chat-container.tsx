@@ -170,7 +170,8 @@ export function ChatContainer(props: ChatContainerProps) {
   const themeSurface = (params.get("themeSurface") || "").trim();
   const themeHeaderColor = (params.get("themeHeaderColor") || "").trim();
 
-  const visualProjectConfig = props.themeOverride ? undefined : projectConfig;
+  const visualProjectConfig =
+    props.themeOverride || themeParam ? undefined : projectConfig;
 
   const tokensOverride = useMemo<Partial<AIChatThemeTokens>>(() => {
     const next: Partial<AIChatThemeTokens> = {};

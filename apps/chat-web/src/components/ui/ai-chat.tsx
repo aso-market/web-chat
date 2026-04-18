@@ -7,7 +7,8 @@ export type AIChatThemeName =
   | "violet-noir"
   | "emerald-night"
   | "crimson-carbon"
-  | "amber-obsidian";
+  | "amber-obsidian"
+  | "qickcash-dark";
 
 export type AIChatLayoutName = "card" | "plain";
 
@@ -160,6 +161,29 @@ export const AI_CHAT_THEMES: Record<AIChatThemeName, AIChatThemeTokens> = {
     typingTint: "#fcd34d",
     particleTint: "rgba(251, 191, 36, 0.16)",
   },
+  "qickcash-dark": {
+    title: "Support",
+    subtitle: "",
+    welcomeText: "",
+    placeholder: "Message",
+    accent: "#38E07A",
+    shellBg: "#121714",
+    shellBorder: "#2D3530",
+    shellGlow: "0 18px 46px rgba(0, 0, 0, 0.28)",
+    headerBg: "#1C2621",
+    headerBorder: "#2D3530",
+    inputBg: "#1C2621",
+    inputBorder: "#3D5245",
+    inputFocusRing: "rgba(56, 224, 122, 0.22)",
+    sendButtonBg: "#38E07A",
+    sendButtonText: "#121714",
+    aiBubbleBg: "#29382E",
+    aiBubbleText: "#FFFFFF",
+    userBubbleBg: "#38E07A",
+    userBubbleText: "#121714",
+    typingTint: "#9EB8A8",
+    particleTint: "rgba(56, 224, 122, 0.08)",
+  },
 };
 
 export type AIChatCardProps = {
@@ -218,6 +242,7 @@ export function AIChatCard({
   const resolvedSubtitle = subtitle || tokens.subtitle;
   const resolvedWelcome = welcomeText || tokens.welcomeText;
   const resolvedPlaceholder = placeholder || tokens.placeholder;
+  const isQickCashTheme = theme === "qickcash-dark";
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -235,7 +260,7 @@ export function AIChatCard({
 
   return (
     <div
-      className={`flex h-full max-h-[100dvh] w-full min-h-0 flex-col ${isPlainLayout ? "" : "mx-auto max-w-[760px] p-2"} ${className || ""}`}
+      className={`flex h-full max-h-[100dvh] w-full min-h-0 flex-col ${isPlainLayout ? "px-3 pb-4 pt-2" : "mx-auto max-w-[760px] p-2"} ${className || ""}`}
       style={{ background: "transparent" }}
     >
       <section
@@ -302,11 +327,17 @@ export function AIChatCard({
           className={`relative flex min-h-0 flex-1 flex-col ${isPlainLayout ? "gap-2" : "p-4"}`}
         >
           <div
-            className="chat-scroll min-h-0 flex-1 overflow-y-auto rounded-2xl border p-3.5"
+            className={`chat-scroll min-h-0 flex-1 overflow-y-auto border p-3.5 ${isQickCashTheme ? "rounded-[22px]" : "rounded-2xl"}`}
             style={{
-              background: `${tokens.shellBg}e8`,
-              borderColor: `${tokens.shellBorder}cc`,
-              boxShadow: `inset 0 1px 0 rgba(255,255,255,0.03)`,
+              background: isQickCashTheme
+                ? "linear-gradient(180deg, rgba(28, 38, 33, 0.96), rgba(18, 23, 20, 0.98))"
+                : `${tokens.shellBg}e8`,
+              borderColor: isQickCashTheme
+                ? "#2D3530"
+                : `${tokens.shellBorder}cc`,
+              boxShadow: isQickCashTheme
+                ? "inset 0 1px 0 rgba(255,255,255,0.03), 0 18px 36px rgba(0,0,0,0.18)"
+                : `inset 0 1px 0 rgba(255,255,255,0.03)`,
             }}
           >
             {messages.length === 0 && resolvedWelcome ? (
@@ -338,18 +369,33 @@ export function AIChatCard({
                           className="inline-block max-w-[84%] rounded-[18px] px-3.5 py-2.5 text-sm leading-6"
                           style={{
                             background: isUser
-                              ? `linear-gradient(180deg, ${tokens.userBubbleBg}, ${tokens.userBubbleBg})`
-                              : `linear-gradient(180deg, ${tokens.aiBubbleBg}, ${tokens.aiBubbleBg})`,
+                              ? isQickCashTheme
+                                ? "linear-gradient(180deg, #38E07A, #32CB6E)"
+                                : `linear-gradient(180deg, ${tokens.userBubbleBg}, ${tokens.userBubbleBg})`
+                              : isQickCashTheme
+                                ? "linear-gradient(180deg, #2D3A31, #29382E)"
+                                : `linear-gradient(180deg, ${tokens.aiBubbleBg}, ${tokens.aiBubbleBg})`,
                             color: isUser
                               ? tokens.userBubbleText
                               : tokens.aiBubbleText,
                             borderBottomRightRadius: isUser ? 6 : 18,
                             borderBottomLeftRadius: isUser ? 18 : 6,
-                            // Explicit "composer-like" stroke around each bubble
-                            border: `1px solid ${tokens.inputBorder}`,
+                            border: `1px solid ${
+                              isUser
+                                ? isQickCashTheme
+                                  ? "#2FC866"
+                                  : tokens.inputBorder
+                                : isQickCashTheme
+                                  ? "#3D5245"
+                                  : tokens.inputBorder
+                            }`,
                             boxShadow: isUser
-                              ? `0 12px 26px rgba(2,6,23,0.32), 0 0 0 1px ${tokens.userBubbleBg}55, inset 0 1px 0 rgba(255,255,255,0.04)`
-                              : `0 12px 26px rgba(2,6,23,0.32), 0 0 0 1px ${tokens.accent}40, inset 0 1px 0 rgba(255,255,255,0.04)`,
+                              ? isQickCashTheme
+                                ? "0 12px 28px rgba(56,224,122,0.18), inset 0 1px 0 rgba(255,255,255,0.14)"
+                                : `0 12px 26px rgba(2,6,23,0.32), 0 0 0 1px ${tokens.userBubbleBg}55, inset 0 1px 0 rgba(255,255,255,0.04)`
+                              : isQickCashTheme
+                                ? "0 12px 26px rgba(2,6,23,0.22), inset 0 1px 0 rgba(255,255,255,0.04)"
+                                : `0 12px 26px rgba(2,6,23,0.32), 0 0 0 1px ${tokens.accent}40, inset 0 1px 0 rgba(255,255,255,0.04)`,
                           }}
                         >
                           <div className="whitespace-pre-wrap break-words">
@@ -401,26 +447,39 @@ export function AIChatCard({
             </p>
             <form
               onSubmit={submit}
-              className="rounded-[18px] border p-2"
+              className={`border p-2 ${isQickCashTheme ? "rounded-[22px]" : "rounded-[18px]"}`}
               style={{
-                background: tokens.inputBg,
-                borderColor: tokens.inputBorder,
-                boxShadow: `0 10px 24px rgba(2, 6, 23, 0.28), 0 0 0 1px ${tokens.inputBorder}88`,
+                background: isQickCashTheme
+                  ? "linear-gradient(180deg, #1C2621, #18211D)"
+                  : tokens.inputBg,
+                borderColor: isQickCashTheme ? "#2D3530" : tokens.inputBorder,
+                boxShadow: isQickCashTheme
+                  ? "0 14px 34px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.02)"
+                  : `0 10px 24px rgba(2, 6, 23, 0.28), 0 0 0 1px ${tokens.inputBorder}88`,
               }}
             >
               <div
-                className="flex items-center gap-2 rounded-[14px] border p-1.5"
-                style={{ borderColor: `${tokens.inputBorder}cc` }}
+                className={`flex items-center gap-2 border p-1.5 ${isQickCashTheme ? "rounded-[18px]" : "rounded-[14px]"}`}
+                style={{
+                  borderColor: isQickCashTheme
+                    ? "#2D3530"
+                    : `${tokens.inputBorder}cc`,
+                  background: isQickCashTheme ? "#121714" : "transparent",
+                }}
               >
                 <input
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
                   placeholder={resolvedPlaceholder}
-                  className="h-11 min-w-0 flex-1 rounded-xl border px-3 text-sm outline-none"
+                  className="h-11 min-w-0 flex-1 rounded-xl border px-3 text-sm text-white outline-none placeholder:text-[#9EB8A8]"
                   style={{
-                    background: `${tokens.shellBg}f2`,
-                    borderColor: `${tokens.inputBorder}d9`,
-                    color: "#e2e8f0",
+                    background: isQickCashTheme
+                      ? "#121714"
+                      : `${tokens.shellBg}f2`,
+                    borderColor: isQickCashTheme
+                      ? "#2D3530"
+                      : `${tokens.inputBorder}d9`,
+                    color: isQickCashTheme ? "#FFFFFF" : "#e2e8f0",
                     boxShadow: `0 0 0 0 ${tokens.inputFocusRing}`,
                   }}
                   disabled={sending}
@@ -428,12 +487,18 @@ export function AIChatCard({
                 <button
                   type="submit"
                   disabled={sending}
-                  className="inline-flex h-11 min-w-[112px] items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-11 min-w-[112px] items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
                   style={{
-                    background: `linear-gradient(180deg, ${tokens.sendButtonBg}, ${tokens.sendButtonBg})`,
+                    background: isQickCashTheme
+                      ? "linear-gradient(180deg, #38E07A, #32CB6E)"
+                      : `linear-gradient(180deg, ${tokens.sendButtonBg}, ${tokens.sendButtonBg})`,
                     color: tokens.sendButtonText,
-                    boxShadow: `0 12px 24px ${tokens.sendButtonBg}66`,
-                    border: `1px solid ${tokens.sendButtonBg}`,
+                    boxShadow: isQickCashTheme
+                      ? "0 12px 24px rgba(56,224,122,0.26)"
+                      : `0 12px 24px ${tokens.sendButtonBg}66`,
+                    border: `1px solid ${
+                      isQickCashTheme ? "#43ED83" : tokens.sendButtonBg
+                    }`,
                   }}
                 >
                   Send
