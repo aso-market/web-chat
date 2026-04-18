@@ -487,18 +487,20 @@ export function AIChatCard({
                 <button
                   type="submit"
                   disabled={sending}
-                  className="inline-flex h-11 min-w-[112px] items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-11 min-w-[112px] items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold transition hover:brightness-[1.02] disabled:cursor-not-allowed disabled:opacity-60"
                   style={{
                     background: isQickCashTheme
-                      ? "linear-gradient(180deg, #38E07A, #32CB6E)"
+                      ? "#38E07A"
                       : `linear-gradient(180deg, ${tokens.sendButtonBg}, ${tokens.sendButtonBg})`,
                     color: tokens.sendButtonText,
                     boxShadow: isQickCashTheme
-                      ? "0 12px 24px rgba(56,224,122,0.26)"
+                      ? "none"
                       : `0 12px 24px ${tokens.sendButtonBg}66`,
                     border: `1px solid ${
-                      isQickCashTheme ? "#43ED83" : tokens.sendButtonBg
+                      isQickCashTheme ? "#38E07A" : tokens.sendButtonBg
                     }`,
+                    fontFamily: "Inter, sans-serif",
+                    letterSpacing: "0",
                   }}
                 >
                   Send
