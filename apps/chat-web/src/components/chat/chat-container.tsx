@@ -417,6 +417,19 @@ export function ChatContainer(props: ChatContainerProps) {
     visualProjectConfig?.backgroundColor ||
     "#020617";
 
+  useEffect(() => {
+    const previousBodyBackground = document.body.style.background;
+    const previousHtmlBackground = document.documentElement.style.background;
+
+    document.body.style.background = appBackground;
+    document.documentElement.style.background = appBackground;
+
+    return () => {
+      document.body.style.background = previousBodyBackground;
+      document.documentElement.style.background = previousHtmlBackground;
+    };
+  }, [appBackground]);
+
   return (
     <div className="h-full" style={{ background: appBackground }}>
       <AIChatCard
