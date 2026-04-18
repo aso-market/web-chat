@@ -447,7 +447,7 @@ export function AIChatCard({
             </p>
             <form
               onSubmit={submit}
-              className={`border p-2 ${isQickCashTheme ? "rounded-[22px]" : "rounded-[18px]"}`}
+              className={`border p-2 ${isQickCashTheme ? "rounded-[26px]" : "rounded-[18px]"}`}
               style={{
                 background: isQickCashTheme
                   ? "linear-gradient(180deg, #1C2621, #18211D)"
@@ -459,7 +459,7 @@ export function AIChatCard({
               }}
             >
               <div
-                className={`flex items-center gap-2 border p-1.5 ${isQickCashTheme ? "rounded-[18px]" : "rounded-[14px]"}`}
+                className={`flex items-center gap-2 border p-1.5 ${isQickCashTheme ? "rounded-[22px]" : "rounded-[14px]"}`}
                 style={{
                   borderColor: isQickCashTheme
                     ? "#2D3530"
