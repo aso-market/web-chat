@@ -9,6 +9,8 @@ export type AIChatThemeName =
   | "crimson-carbon"
   | "amber-obsidian";
 
+export type AIChatLayoutName = "card" | "plain";
+
 export type AIChatRole = "assistant" | "user";
 
 export type AIChatMessage = {
@@ -175,6 +177,7 @@ export type AIChatCardProps = {
   placeholder?: string;
   className?: string;
   avatar?: string;
+  layout?: AIChatLayoutName;
 };
 
 function typingDotsStyle(delayMs: number): Record<string, string | number> {
@@ -199,14 +202,16 @@ export function AIChatCard({
   placeholder,
   className,
   avatar = "🤖",
+  layout = "card",
 }: AIChatCardProps) {
   const [draft, setDraft] = useState("");
   const submitLockRef = useRef(false);
   const sending = isSending;
+  const isPlainLayout = layout === "plain";
 
   const tokens = useMemo(
     () => ({ ...AI_CHAT_THEMES[theme], ...tokensOverride }),
-    [theme, tokensOverride]
+    [theme, tokensOverride],
   );
 
   const resolvedTitle = title || tokens.title;
@@ -230,58 +235,72 @@ export function AIChatCard({
 
   return (
     <div
-      className={`mx-auto flex h-full max-h-[100dvh] w-full max-w-[760px] min-h-0 flex-col p-2 ${className || ""}`}
+      className={`flex h-full max-h-[100dvh] w-full min-h-0 flex-col ${isPlainLayout ? "" : "mx-auto max-w-[760px] p-2"} ${className || ""}`}
       style={{ background: "transparent" }}
     >
       <section
-        className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[24px] border"
+        className={`relative flex min-h-0 flex-1 flex-col overflow-hidden ${isPlainLayout ? "" : "rounded-[24px] border"}`}
         style={{
-          background: tokens.shellBg,
-          borderColor: tokens.shellBorder,
-          boxShadow: tokens.shellGlow,
+          background: isPlainLayout ? "transparent" : tokens.shellBg,
+          borderColor: isPlainLayout ? "transparent" : tokens.shellBorder,
+          boxShadow: isPlainLayout ? "none" : tokens.shellGlow,
         }}
       >
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background: `radial-gradient(circle at 15% -20%, ${tokens.particleTint}, transparent 55%)`,
-          }}
-        />
-        <header
-          className="relative border-b px-5 pb-4 pt-4"
-          style={{
-            background: `linear-gradient(120deg, ${tokens.headerBg}, ${tokens.shellBg})`,
-            borderColor: tokens.headerBorder,
-          }}
-        >
-          <div className="flex items-center gap-3.5">
+        {!isPlainLayout ? (
+          <>
             <div
-              className="flex h-11 w-11 items-center justify-center rounded-full border text-lg"
+              className="pointer-events-none absolute inset-0"
               style={{
-                borderColor: `${tokens.accent}55`,
-                background: `${tokens.accent}22`,
-                boxShadow: `0 8px 24px ${tokens.accent}30`,
+                background: `radial-gradient(circle at 15% -20%, ${tokens.particleTint}, transparent 55%)`,
+              }}
+            />
+            <header
+              className="relative border-b px-5 pb-4 pt-4"
+              style={{
+                background: `linear-gradient(120deg, ${tokens.headerBg}, ${tokens.shellBg})`,
+                borderColor: tokens.headerBorder,
               }}
             >
-              {avatar || "•"}
-            </div>
-            <div className="min-w-0 flex-1">
-              <h1 className="m-0 truncate text-[15px] font-semibold tracking-[0.01em] text-slate-100">
-                {resolvedTitle}
-              </h1>
-              {resolvedSubtitle ? (
-                <p className="m-0 mt-1 truncate text-xs text-slate-300">{resolvedSubtitle}</p>
-              ) : null}
-            </div>
-            <span
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ background: tokens.accent, boxShadow: `0 0 12px ${tokens.accent}` }}
-            />
-          </div>
-          <div className="mt-4 h-px" style={{ background: `${tokens.headerBorder}aa` }} />
-        </header>
+              <div className="flex items-center gap-3.5">
+                <div
+                  className="flex h-11 w-11 items-center justify-center rounded-full border text-lg"
+                  style={{
+                    borderColor: `${tokens.accent}55`,
+                    background: `${tokens.accent}22`,
+                    boxShadow: `0 8px 24px ${tokens.accent}30`,
+                  }}
+                >
+                  {avatar || "•"}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h1 className="m-0 truncate text-[15px] font-semibold tracking-[0.01em] text-slate-100">
+                    {resolvedTitle}
+                  </h1>
+                  {resolvedSubtitle ? (
+                    <p className="m-0 mt-1 truncate text-xs text-slate-300">
+                      {resolvedSubtitle}
+                    </p>
+                  ) : null}
+                </div>
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{
+                    background: tokens.accent,
+                    boxShadow: `0 0 12px ${tokens.accent}`,
+                  }}
+                />
+              </div>
+              <div
+                className="mt-4 h-px"
+                style={{ background: `${tokens.headerBorder}aa` }}
+              />
+            </header>
+          </>
+        ) : null}
 
-        <div className="relative flex min-h-0 flex-1 flex-col p-4">
+        <div
+          className={`relative flex min-h-0 flex-1 flex-col ${isPlainLayout ? "gap-2" : "p-4"}`}
+        >
           <div
             className="chat-scroll min-h-0 flex-1 overflow-y-auto rounded-2xl border p-3.5"
             style={{
@@ -321,7 +340,9 @@ export function AIChatCard({
                             background: isUser
                               ? `linear-gradient(180deg, ${tokens.userBubbleBg}, ${tokens.userBubbleBg})`
                               : `linear-gradient(180deg, ${tokens.aiBubbleBg}, ${tokens.aiBubbleBg})`,
-                            color: isUser ? tokens.userBubbleText : tokens.aiBubbleText,
+                            color: isUser
+                              ? tokens.userBubbleText
+                              : tokens.aiBubbleText,
                             borderBottomRightRadius: isUser ? 6 : 18,
                             borderBottomLeftRadius: isUser ? 18 : 6,
                             // Explicit "composer-like" stroke around each bubble
@@ -331,10 +352,14 @@ export function AIChatCard({
                               : `0 12px 26px rgba(2,6,23,0.32), 0 0 0 1px ${tokens.accent}40, inset 0 1px 0 rgba(255,255,255,0.04)`,
                           }}
                         >
-                          <div className="whitespace-pre-wrap break-words">{message.text}</div>
+                          <div className="whitespace-pre-wrap break-words">
+                            {message.text}
+                          </div>
                         </div>
                         {message.timestamp ? (
-                          <span className="mt-1 px-1 text-[10px] text-slate-400">{message.timestamp}</span>
+                          <span className="mt-1 px-1 text-[10px] text-slate-400">
+                            {message.timestamp}
+                          </span>
                         ) : null}
                       </motion.div>
                     );
@@ -346,17 +371,29 @@ export function AIChatCard({
             {isTyping ? (
               <div
                 className="mt-2 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs"
-                style={{ color: tokens.typingTint, borderColor: `${tokens.typingTint}4d` }}
+                style={{
+                  color: tokens.typingTint,
+                  borderColor: `${tokens.typingTint}4d`,
+                }}
               >
                 <span className="inline-flex gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-current" style={typingDotsStyle(0)} />
-                  <span className="h-1.5 w-1.5 rounded-full bg-current" style={typingDotsStyle(120)} />
-                  <span className="h-1.5 w-1.5 rounded-full bg-current" style={typingDotsStyle(240)} />
+                  <span
+                    className="h-1.5 w-1.5 rounded-full bg-current"
+                    style={typingDotsStyle(0)}
+                  />
+                  <span
+                    className="h-1.5 w-1.5 rounded-full bg-current"
+                    style={typingDotsStyle(120)}
+                  />
+                  <span
+                    className="h-1.5 w-1.5 rounded-full bg-current"
+                    style={typingDotsStyle(240)}
+                  />
                 </span>
               </div>
             ) : null}
           </div>
-          <div className="mt-2 flex flex-col gap-1">
+          <div className={`flex flex-col gap-1 ${isPlainLayout ? "" : "mt-2"}`}>
             <p
               className={`m-0 min-h-4 px-1 text-[11px] ${errorText ? "text-rose-400" : "text-slate-400"}`}
             >
@@ -371,7 +408,10 @@ export function AIChatCard({
                 boxShadow: `0 10px 24px rgba(2, 6, 23, 0.28), 0 0 0 1px ${tokens.inputBorder}88`,
               }}
             >
-              <div className="flex items-center gap-2 rounded-[14px] border p-1.5" style={{ borderColor: `${tokens.inputBorder}cc` }}>
+              <div
+                className="flex items-center gap-2 rounded-[14px] border p-1.5"
+                style={{ borderColor: `${tokens.inputBorder}cc` }}
+              >
                 <input
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}

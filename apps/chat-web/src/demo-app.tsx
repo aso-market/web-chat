@@ -1,5 +1,5 @@
 import { ChatContainer } from "./components/chat/chat-container";
-import { AIChatThemeName } from "./components/ui/ai-chat";
+import { AIChatLayoutName, AIChatThemeName } from "./components/ui/ai-chat";
 
 const themeOrder: AIChatThemeName[] = [
   "neon-blue",
@@ -17,13 +17,25 @@ const DEMO_CONVERSATIONS: Record<AIChatThemeName, string> = {
   "amber-obsidian": "demo-amber-obsidian",
 };
 
-function ThemeCard({ theme, apiBase }: { theme: AIChatThemeName; apiBase: string }) {
-  const conversationId = DEMO_CONVERSATIONS[theme];
+function ThemeCard({
+  theme,
+  apiBase,
+  layout = "card",
+  label,
+}: {
+  theme: AIChatThemeName;
+  apiBase: string;
+  layout?: AIChatLayoutName;
+  label?: string;
+}) {
+  const conversationId = `${DEMO_CONVERSATIONS[theme]}-${layout}`;
 
   return (
     <article className="min-h-0 rounded-2xl border border-slate-800/90 bg-slate-950/70 p-2 shadow-[0_20px_54px_rgba(2,6,23,0.48)]">
       <div className="mb-2 flex items-center justify-between px-1">
-        <h2 className="m-0 text-xs font-semibold uppercase tracking-wide text-slate-300">{theme}</h2>
+        <h2 className="m-0 text-xs font-semibold uppercase tracking-wide text-slate-300">
+          {label || `${theme} / ${layout}`}
+        </h2>
       </div>
       <div className="h-[520px] min-h-0">
         <ChatContainer
@@ -37,6 +49,7 @@ function ThemeCard({ theme, apiBase }: { theme: AIChatThemeName; apiBase: string
           welcomeTextOverride=""
           placeholderOverride="Message"
           avatarOverride=""
+          layoutOverride={layout}
         />
       </div>
     </article>
@@ -45,8 +58,11 @@ function ThemeCard({ theme, apiBase }: { theme: AIChatThemeName; apiBase: string
 
 export function DemoApp() {
   const params = new URLSearchParams(window.location.search);
-  const apiBase =
-    (params.get("apiBase") || import.meta.env.VITE_API_BASE || "http://localhost:8787").trim();
+  const apiBase = (
+    params.get("apiBase") ||
+    import.meta.env.VITE_API_BASE ||
+    "http://localhost:8787"
+  ).trim();
 
   return (
     <div className="min-h-full bg-slate-950 px-4 py-6 text-slate-100">
@@ -56,6 +72,17 @@ export function DemoApp() {
           {themeOrder.map((theme) => (
             <ThemeCard key={theme} theme={theme} apiBase={apiBase} />
           ))}
+        </div>
+        <h2 className="mt-8 text-lg font-semibold text-slate-100">
+          Embed Layout
+        </h2>
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <ThemeCard
+            theme="emerald-night"
+            apiBase={apiBase}
+            layout="plain"
+            label="emerald-night / plain"
+          />
         </div>
       </div>
     </div>
