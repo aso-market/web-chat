@@ -70,7 +70,7 @@ const CHAT_THEME_KEYS: Record<string, AIChatThemeName> = {
 };
 
 const DEFAULT_WEBCHAT_API_BASE =
-  import.meta.env.VITE_API_BASE || "http://localhost:8787";
+  import.meta.env.VITE_API_BASE || window.location.origin;
 
 function toDisplayMessage(message: BackendMessage): AIChatMessage {
   const role = message.role === "support" ? "assistant" : "user";
