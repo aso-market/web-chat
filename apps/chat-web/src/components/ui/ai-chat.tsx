@@ -202,6 +202,7 @@ export type AIChatCardProps = {
   className?: string;
   avatar?: string;
   layout?: AIChatLayoutName;
+  fitViewport?: boolean;
 };
 
 function typingDotsStyle(delayMs: number): Record<string, string | number> {
@@ -227,8 +228,10 @@ export function AIChatCard({
   className,
   avatar = "🤖",
   layout = "card",
+  fitViewport = true,
 }: AIChatCardProps) {
   const [draft, setDraft] = useState("");
+  const rootRef = useRef<HTMLDivElement>(null);
   const submitLockRef = useRef(false);
   const sending = isSending;
   const isPlainLayout = layout === "plain";
@@ -258,10 +261,30 @@ export function AIChatCard({
     }
   };
 
+  const stabilizeViewport = () => {
+    const resetScroll = () => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      rootRef.current?.scrollTo(0, 0);
+    };
+
+    resetScroll();
+    window.setTimeout(resetScroll, 80);
+    window.setTimeout(resetScroll, 260);
+  };
+
   return (
     <div
-      className={`flex h-full max-h-[100dvh] w-full min-h-0 flex-col ${isPlainLayout ? "px-3 pb-4 pt-2" : "mx-auto max-w-[760px] p-2"} ${className || ""}`}
-      style={{ background: "transparent" }}
+      ref={rootRef}
+      className={`flex w-full min-h-0 flex-col overflow-hidden ${fitViewport ? "" : "h-full"} ${isPlainLayout ? "px-3 pb-4 pt-2" : "mx-auto max-w-[760px] p-2"} ${className || ""}`}
+      style={{
+        background: "transparent",
+        height: fitViewport ? "var(--chat-viewport-height, 100dvh)" : "100%",
+        maxHeight: fitViewport
+          ? "var(--chat-viewport-height, 100dvh)"
+          : "100%",
+      }}
     >
       <section
         className={`relative flex min-h-0 flex-1 flex-col overflow-hidden ${isPlainLayout ? "" : "rounded-[24px] border"}`}
@@ -439,7 +462,9 @@ export function AIChatCard({
               </div>
             ) : null}
           </div>
-          <div className={`flex flex-col gap-1 ${isPlainLayout ? "" : "mt-2"}`}>
+          <div
+            className={`flex shrink-0 flex-col gap-1 ${isPlainLayout ? "" : "mt-2"}`}
+          >
             <p
               className={`m-0 min-h-4 px-1 text-[11px] ${errorText ? "text-rose-400" : "text-slate-400"}`}
             >
@@ -470,8 +495,9 @@ export function AIChatCard({
                 <input
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
+                  onFocus={stabilizeViewport}
                   placeholder={resolvedPlaceholder}
-                  className="h-11 min-w-0 flex-1 rounded-xl border px-3 text-sm text-white outline-none placeholder:text-[#9EB8A8]"
+                  className="h-11 min-w-0 flex-1 rounded-xl border px-3 text-[16px] text-white outline-none placeholder:text-[#9EB8A8]"
                   style={{
                     background: isQickCashTheme
                       ? "#121714"

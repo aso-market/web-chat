@@ -17,6 +17,27 @@ body {
   color: #e2e8f0;
 }
 
+html.chat-viewport-locked,
+body.chat-viewport-locked,
+#app.chat-viewport-locked {
+  height: var(--chat-viewport-height, 100dvh);
+  min-height: var(--chat-viewport-height, 100dvh);
+  max-height: var(--chat-viewport-height, 100dvh);
+  overscroll-behavior: none;
+  overflow: hidden;
+}
+
+body.chat-viewport-locked,
+#app.chat-viewport-locked {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+}
+
+#app.chat-viewport-locked {
+  overflow: hidden;
+}
+
 /* Chat scrollbar: subtle, theme-friendly (scoped). */
 .chat-scroll {
   scrollbar-gutter: stable both-edges;

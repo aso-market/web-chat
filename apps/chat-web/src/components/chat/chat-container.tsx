@@ -23,6 +23,7 @@ type ChatContainerProps = {
   avatarOverride?: string;
   backgroundOverride?: string;
   layoutOverride?: AIChatLayoutName;
+  lockViewport?: boolean;
 };
 
 type WebchatConfig = {
@@ -71,6 +72,27 @@ const CHAT_THEME_KEYS: Record<string, AIChatThemeName> = {
 
 const DEFAULT_WEBCHAT_API_BASE =
   import.meta.env.VITE_API_BASE || window.location.origin;
+
+function getViewportHeight(): number {
+  return Math.max(
+    1,
+    Math.round(
+      window.visualViewport?.height ||
+        window.innerHeight ||
+        document.documentElement.clientHeight,
+    ),
+  );
+}
+
+function syncViewportHeight() {
+  const height = `${getViewportHeight()}px`;
+  document.documentElement.style.setProperty("--chat-viewport-height", height);
+  document.body.style.setProperty("--chat-viewport-height", height);
+  document.getElementById("app")?.style.setProperty(
+    "--chat-viewport-height",
+    height,
+  );
+}
 
 function toDisplayMessage(message: BackendMessage): AIChatMessage {
   const role = message.role === "support" ? "assistant" : "user";
@@ -144,6 +166,12 @@ export function ChatContainer(props: ChatContainerProps) {
   const streamRef = useRef<EventSource | null>(null);
   const sendInFlightRef = useRef(false);
   const lastSentRef = useRef<{ text: string; ts: number } | null>(null);
+  const shouldLockViewport =
+    props.lockViewport ??
+    (!props.projectId &&
+      !props.customerId &&
+      !props.conversationIdOverride &&
+      !props.storageKeyOverride);
 
   const titleOverride =
     props.titleOverride ?? (params.get("title") || "").trim();
@@ -418,6 +446,43 @@ export function ChatContainer(props: ChatContainerProps) {
     AI_CHAT_THEMES[themeName].shellBg;
 
   useEffect(() => {
+    if (!shouldLockViewport) {
+      return;
+    }
+
+    const app = document.getElementById("app");
+
+    document.documentElement.classList.add("chat-viewport-locked");
+    document.body.classList.add("chat-viewport-locked");
+    app?.classList.add("chat-viewport-locked");
+    syncViewportHeight();
+
+    const syncSoon = () => {
+      syncViewportHeight();
+      window.setTimeout(syncViewportHeight, 80);
+      window.setTimeout(syncViewportHeight, 260);
+    };
+    const viewport = window.visualViewport;
+    viewport?.addEventListener("resize", syncSoon);
+    viewport?.addEventListener("scroll", syncSoon);
+    window.addEventListener("resize", syncSoon);
+    window.addEventListener("orientationchange", syncSoon);
+
+    return () => {
+      viewport?.removeEventListener("resize", syncSoon);
+      viewport?.removeEventListener("scroll", syncSoon);
+      window.removeEventListener("resize", syncSoon);
+      window.removeEventListener("orientationchange", syncSoon);
+      document.documentElement.classList.remove("chat-viewport-locked");
+      document.body.classList.remove("chat-viewport-locked");
+      app?.classList.remove("chat-viewport-locked");
+      document.documentElement.style.removeProperty("--chat-viewport-height");
+      document.body.style.removeProperty("--chat-viewport-height");
+      app?.style.removeProperty("--chat-viewport-height");
+    };
+  }, [shouldLockViewport]);
+
+  useEffect(() => {
     const previousBodyBackground = document.body.style.background;
     const previousHtmlBackground = document.documentElement.style.background;
 
@@ -431,7 +496,15 @@ export function ChatContainer(props: ChatContainerProps) {
   }, [appBackground]);
 
   return (
-    <div className="h-full" style={{ background: appBackground }}>
+    <div
+      className="min-h-0 overflow-hidden"
+      style={{
+        background: appBackground,
+        height: shouldLockViewport
+          ? "var(--chat-viewport-height, 100dvh)"
+          : "100%",
+      }}
+    >
       <AIChatCard
         messages={messages}
         onSend={send}
@@ -447,6 +520,7 @@ export function ChatContainer(props: ChatContainerProps) {
         welcomeText={welcomeOverride || projectConfig?.welcomeText}
         placeholder={placeholderOverride || projectConfig?.placeholder}
         avatar={props.avatarOverride || projectConfig?.widgetIcon || "💬"}
+        fitViewport={shouldLockViewport}
       />
     </div>
   );
