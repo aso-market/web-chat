@@ -364,15 +364,28 @@ export function AIChatCard({
             }}
           >
             {messages.length === 0 && resolvedWelcome ? (
-              <div
-                className="rounded-2xl border border-dashed px-4 py-3 text-sm leading-6"
-                style={{
-                  color: tokens.aiBubbleText,
-                  borderColor: `${tokens.accent}55`,
-                  background: `${tokens.accent}1c`,
-                }}
-              >
-                {resolvedWelcome}
+              <div className="flex flex-col items-start">
+                <div
+                  className="inline-block max-w-[84%] rounded-[18px] px-3.5 py-2.5 text-sm leading-6"
+                  style={{
+                    background: isQickCashTheme
+                      ? "linear-gradient(180deg, #2D3A31, #29382E)"
+                      : `linear-gradient(180deg, ${tokens.aiBubbleBg}, ${tokens.aiBubbleBg})`,
+                    color: tokens.aiBubbleText,
+                    borderBottomRightRadius: 18,
+                    borderBottomLeftRadius: 6,
+                    border: `1px solid ${
+                      isQickCashTheme ? "#3D5245" : tokens.inputBorder
+                    }`,
+                    boxShadow: isQickCashTheme
+                      ? "0 12px 26px rgba(2,6,23,0.22), inset 0 1px 0 rgba(255,255,255,0.04)"
+                      : `0 12px 26px rgba(2,6,23,0.32), 0 0 0 1px ${tokens.accent}40, inset 0 1px 0 rgba(255,255,255,0.04)`,
+                  }}
+                >
+                  <div className="whitespace-pre-wrap break-words">
+                    {resolvedWelcome}
+                  </div>
+                </div>
               </div>
             ) : (
               <AnimatePresence initial={false}>
