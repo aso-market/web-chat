@@ -5,7 +5,6 @@ export function App() {
     <ChatContainer
       titleOverride="Support"
       subtitleOverride=""
-      welcomeTextOverride=""
       placeholderOverride="Message"
       avatarOverride=""
     />
