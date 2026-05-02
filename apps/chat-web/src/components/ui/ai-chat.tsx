@@ -199,6 +199,7 @@ export type AIChatCardProps = {
   subtitle?: string;
   welcomeText?: string;
   placeholder?: string;
+  sendLabel?: string;
   className?: string;
   avatar?: string;
   layout?: AIChatLayoutName;
@@ -225,6 +226,7 @@ export function AIChatCard({
   subtitle,
   welcomeText,
   placeholder,
+  sendLabel,
   className,
   avatar = "🤖",
   layout = "card",
@@ -245,6 +247,7 @@ export function AIChatCard({
   const resolvedSubtitle = subtitle || tokens.subtitle;
   const resolvedWelcome = welcomeText || tokens.welcomeText;
   const resolvedPlaceholder = placeholder || tokens.placeholder;
+  const resolvedSendLabel = sendLabel?.trim() || "Send";
   const isQickCashTheme = theme === "qickcash-dark";
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -542,7 +545,7 @@ export function AIChatCard({
                     letterSpacing: "0",
                   }}
                 >
-                  Send
+                  {resolvedSendLabel}
                   <SendHorizontal size={14} />
                 </button>
               </div>

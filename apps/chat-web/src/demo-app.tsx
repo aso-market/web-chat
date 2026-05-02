@@ -46,10 +46,6 @@ function ThemeCard({
           themeOverride={theme}
           conversationIdOverride={conversationId}
           storageKeyOverride={`support_widget_conversation:demo:${conversationId}`}
-          titleOverride="Support"
-          subtitleOverride=""
-          welcomeTextOverride=""
-          placeholderOverride="Message"
           avatarOverride=""
           layoutOverride={layout}
         />

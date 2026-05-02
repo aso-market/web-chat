@@ -7,6 +7,7 @@ import {
   AIChatThemeName,
   AIChatThemeTokens,
 } from "../ui/ai-chat";
+import { getLocalizedChatCopy } from "./locale-copy";
 
 type ChatContainerProps = {
   projectId?: string;
@@ -20,6 +21,7 @@ type ChatContainerProps = {
   subtitleOverride?: string;
   welcomeTextOverride?: string;
   placeholderOverride?: string;
+  sendLabelOverride?: string;
   avatarOverride?: string;
   backgroundOverride?: string;
   layoutOverride?: AIChatLayoutName;
@@ -126,6 +128,7 @@ function parseLayoutFromQuery(
 
 export function ChatContainer(props: ChatContainerProps) {
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
+  const localizedCopy = useMemo(() => getLocalizedChatCopy(params), [params]);
   const inputProjectId =
     props.projectId ?? (params.get("projectId") || "").trim();
   const customerId =
@@ -153,7 +156,7 @@ export function ChatContainer(props: ChatContainerProps) {
   );
   const [messages, setMessages] = useState<AIChatMessage[]>([]);
   const [resolvedProjectId, setResolvedProjectId] = useState(inputProjectId);
-  const [statusText, setStatusText] = useState("Initializing chat...");
+  const [statusText, setStatusText] = useState("");
   const [errorText, setErrorText] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [themeName, setThemeName] = useState<AIChatThemeName>(
@@ -180,6 +183,8 @@ export function ChatContainer(props: ChatContainerProps) {
     (params.get("subtitle") || params.get("description") || "").trim();
   const placeholderOverride =
     props.placeholderOverride ?? (params.get("placeholder") || "").trim();
+  const sendLabelOverride =
+    props.sendLabelOverride ?? (params.get("sendLabel") || "").trim();
   const welcomeOverride =
     props.welcomeTextOverride ?? (params.get("welcomeText") || "").trim();
   const themePrimary = (params.get("themePrimary") || "").trim();
@@ -268,7 +273,7 @@ export function ChatContainer(props: ChatContainerProps) {
 
     const initAndLoad = async () => {
       setErrorText("");
-      setStatusText("Initializing chat...");
+      setStatusText("");
       try {
         const payload: Record<string, string> = {};
         if (inputProjectId) payload.projectId = inputProjectId;
@@ -398,7 +403,7 @@ export function ChatContainer(props: ChatContainerProps) {
     lastSentRef.current = { text, ts: now };
     sendInFlightRef.current = true;
     setErrorText("");
-    setStatusText("Sending...");
+    setStatusText("");
     setIsSending(true);
     try {
       const body: Record<string, string> = {
@@ -515,10 +520,15 @@ export function ChatContainer(props: ChatContainerProps) {
         theme={themeName}
         layout={props.layoutOverride || layoutParam || "card"}
         tokensOverride={tokensOverride}
-        title={titleOverride || projectConfig?.title}
+        title={titleOverride || projectConfig?.title || localizedCopy.title}
         subtitle={subtitleOverride || projectConfig?.subtitle}
         welcomeText={welcomeOverride || projectConfig?.welcomeText}
-        placeholder={placeholderOverride || projectConfig?.placeholder}
+        placeholder={
+          placeholderOverride ||
+          projectConfig?.placeholder ||
+          localizedCopy.placeholder
+        }
+        sendLabel={sendLabelOverride || localizedCopy.sendLabel}
         avatar={props.avatarOverride || projectConfig?.widgetIcon || "💬"}
         fitViewport={shouldLockViewport}
       />

@@ -78,7 +78,8 @@ npm run preview
 - `conversationId` — ID диалога
 - `apiBase` — URL API
 - `theme` — Название темы (neon-blue, violet-noir, emerald-night, crimson-carbon, amber-obsidian, qickcash-dark)
-- `title`, `subtitle`, `welcomeText`, `placeholder` — Текстовые переопределения
+- `title`, `subtitle`, `welcomeText`, `placeholder`, `sendLabel` — Текстовые переопределения
+- `lang`, `language`, `locale` — код языка для встроенных fallback-переводов composer UI
 - `themePrimary` — Основной цвет
 - `themeButtonColor` — Цвет кнопки отправки
 - `themeBubbleClientBg` — Фон сообщений пользователя
