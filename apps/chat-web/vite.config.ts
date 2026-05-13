@@ -5,7 +5,9 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: "index.html",
-        demo: "demo.html",
+        ...(process.env.CHAT_WEB_INCLUDE_DEMO === "1"
+          ? { demo: "demo.html" }
+          : {}),
       },
     },
   },

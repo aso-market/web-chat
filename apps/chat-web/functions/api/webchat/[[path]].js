@@ -9,12 +9,28 @@ const normalizePathParam = (value) => {
 };
 
 export async function onRequest(context) {
-  const proxyPath = normalizePathParam(context.params.path);
-  const targetUrl = buildProxyUrl(
-    context.request,
-    context.env,
-    `/api/webchat/${proxyPath}`,
-  );
+  try {
+    const proxyPath = normalizePathParam(context.params.path);
+    const targetUrl = buildProxyUrl(
+      context.request,
+      context.env,
+      `/api/webchat/${proxyPath}`,
+    );
 
-  return forwardRequest(context.request, targetUrl);
+    return forwardRequest(context.request, targetUrl, context.env);
+  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        error:
+          error instanceof Error ? error.message : "webchat_proxy_failed",
+      }),
+      {
+        status: 500,
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+        },
+      },
+    );
+  }
 }

@@ -1,0 +1,2 @@
+WEBCHAT_PROXY_ORIGIN=https://your-org-owned-upstream.example.com
+WEBCHAT_FIXED_PROJECT_ID=your-project-id

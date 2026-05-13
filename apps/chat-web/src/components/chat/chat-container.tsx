@@ -26,6 +26,32 @@ type ChatContainerProps = {
   lockViewport?: boolean;
 };
 
+type ChatBootstrapPayload = {
+  projectId?: string;
+  customerId?: string;
+  apiBase?: string;
+  signature?: string;
+  conversationId?: string;
+  theme?: AIChatThemeName;
+  layout?: AIChatLayoutName;
+  title?: string;
+  subtitle?: string;
+  welcomeText?: string;
+  placeholder?: string;
+  sendLabel?: string;
+  avatar?: string;
+  background?: string;
+  themePrimary?: string;
+  themeButtonColor?: string;
+  themeBubbleClientBg?: string;
+  themeBubbleClientText?: string;
+  themeBubbleSupportBg?: string;
+  themeBubbleSupportText?: string;
+  themeBackground?: string;
+  themeSurface?: string;
+  themeHeaderColor?: string;
+};
+
 type WebchatConfig = {
   title?: string;
   subtitle?: string;
@@ -72,6 +98,25 @@ const CHAT_THEME_KEYS: Record<string, AIChatThemeName> = {
 
 const DEFAULT_WEBCHAT_API_BASE =
   import.meta.env.VITE_API_BASE || window.location.origin;
+
+const normalizeString = (value: unknown) =>
+  typeof value === "string" ? value.trim() : "";
+
+function getBootstrapPayload(value: unknown): ChatBootstrapPayload | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  return value as ChatBootstrapPayload;
+}
+
+function getParentOrigin(): string {
+  try {
+    return document.referrer ? new URL(document.referrer).origin : "*";
+  } catch {
+    return "*";
+  }
+}
 
 function getViewportHeight(): number {
   return Math.max(
@@ -126,30 +171,58 @@ function parseLayoutFromQuery(
 
 export function ChatContainer(props: ChatContainerProps) {
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
+  const isBootstrapMode = params.get("bootstrap") === "1";
+  const bootstrapToken = normalizeString(params.get("bootstrapToken"));
+  const [bootstrapConfig, setBootstrapConfig] =
+    useState<ChatBootstrapPayload | null>(null);
+  const parentOrigin = useMemo(() => getParentOrigin(), []);
+
+  const bootstrapProjectId = normalizeString(bootstrapConfig?.projectId);
+  const bootstrapCustomerId = normalizeString(bootstrapConfig?.customerId);
+  const bootstrapApiBase = normalizeString(bootstrapConfig?.apiBase);
+  const bootstrapSignature = normalizeString(bootstrapConfig?.signature);
+  const bootstrapConversationId = normalizeString(
+    bootstrapConfig?.conversationId,
+  );
+  const bootstrapTheme = bootstrapConfig?.theme;
+  const bootstrapLayout = bootstrapConfig?.layout;
+
   const inputProjectId =
-    props.projectId ?? (params.get("projectId") || "").trim();
+    props.projectId ??
+    (bootstrapProjectId || normalizeString(params.get("projectId")));
   const customerId =
-    props.customerId ?? (params.get("customerId") || "").trim();
+    props.customerId ??
+    (bootstrapCustomerId || normalizeString(params.get("customerId")));
   const apiBase = (
     props.apiBase ??
-    params.get("apiBase") ??
-    DEFAULT_WEBCHAT_API_BASE
+    (bootstrapApiBase ||
+      params.get("apiBase") ||
+      DEFAULT_WEBCHAT_API_BASE)
   ).replace(/\/+$/, "");
-  const signature = props.signature ?? (params.get("signature") || "").trim();
-  const queryConversationId = (params.get("conversationId") || "").trim();
+  const signature =
+    props.signature ??
+    (bootstrapSignature || normalizeString(params.get("signature")));
+  const queryConversationId =
+    bootstrapConversationId || normalizeString(params.get("conversationId"));
   const themeParam = parseThemeFromQuery(params);
   const layoutParam = parseLayoutFromQuery(params);
   const storageKey =
     props.storageKeyOverride ||
-    (inputProjectId
-      ? `support_widget_conversation:${inputProjectId}`
-      : customerId
-        ? `support_widget_conversation:customer:${customerId}`
-        : "");
-  const [conversationId, setConversationId] = useState(
+    (inputProjectId && customerId
+      ? `support_widget_conversation:${inputProjectId}:customer:${customerId}`
+      : inputProjectId
+        ? `support_widget_conversation:${inputProjectId}`
+        : customerId
+          ? `support_widget_conversation:customer:${customerId}`
+          : "");
+  const storedConversationId =
+    storageKey ? localStorage.getItem(storageKey) || "" : "";
+  const seededConversationId =
     props.conversationIdOverride ||
-      queryConversationId ||
-      (storageKey ? localStorage.getItem(storageKey) || "" : ""),
+    queryConversationId ||
+    storedConversationId;
+  const [conversationId, setConversationId] = useState(
+    seededConversationId,
   );
   const [messages, setMessages] = useState<AIChatMessage[]>([]);
   const [resolvedProjectId, setResolvedProjectId] = useState(inputProjectId);
@@ -157,7 +230,7 @@ export function ChatContainer(props: ChatContainerProps) {
   const [errorText, setErrorText] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [themeName, setThemeName] = useState<AIChatThemeName>(
-    props.themeOverride || themeParam || "neon-blue",
+    props.themeOverride || bootstrapTheme || themeParam || "neon-blue",
   );
   const [projectConfig, setProjectConfig] = useState<WebchatConfig | undefined>(
     undefined,
@@ -174,32 +247,112 @@ export function ChatContainer(props: ChatContainerProps) {
       !props.storageKeyOverride);
 
   const titleOverride =
-    props.titleOverride ?? (params.get("title") || "").trim();
+    props.titleOverride ??
+    (normalizeString(bootstrapConfig?.title) ||
+      normalizeString(params.get("title")));
   const subtitleOverride =
     props.subtitleOverride ??
-    (params.get("subtitle") || params.get("description") || "").trim();
+    (normalizeString(bootstrapConfig?.subtitle) ||
+      normalizeString(params.get("subtitle") || params.get("description")));
   const placeholderOverride =
-    props.placeholderOverride ?? (params.get("placeholder") || "").trim();
+    props.placeholderOverride ??
+    (normalizeString(bootstrapConfig?.placeholder) ||
+      normalizeString(params.get("placeholder")));
   const welcomeOverride =
-    props.welcomeTextOverride ?? (params.get("welcomeText") || "").trim();
-  const themePrimary = (params.get("themePrimary") || "").trim();
-  const themeButtonColor = (params.get("themeButtonColor") || "").trim();
-  const themeBubbleClientBg = (params.get("themeBubbleClientBg") || "").trim();
-  const themeBubbleClientText = (
-    params.get("themeBubbleClientText") || ""
-  ).trim();
-  const themeBubbleSupportBg = (
-    params.get("themeBubbleSupportBg") || ""
-  ).trim();
-  const themeBubbleSupportText = (
-    params.get("themeBubbleSupportText") || ""
-  ).trim();
-  const themeBackground = (params.get("themeBackground") || "").trim();
-  const themeSurface = (params.get("themeSurface") || "").trim();
-  const themeHeaderColor = (params.get("themeHeaderColor") || "").trim();
+    props.welcomeTextOverride ??
+    (normalizeString(bootstrapConfig?.welcomeText) ||
+      normalizeString(params.get("welcomeText")));
+  const sendLabelOverride =
+    normalizeString(bootstrapConfig?.sendLabel) ||
+    normalizeString(params.get("sendLabel"));
+  const themePrimary =
+    normalizeString(bootstrapConfig?.themePrimary) ||
+    normalizeString(params.get("themePrimary"));
+  const themeButtonColor =
+    normalizeString(bootstrapConfig?.themeButtonColor) ||
+    normalizeString(params.get("themeButtonColor"));
+  const themeBubbleClientBg =
+    normalizeString(bootstrapConfig?.themeBubbleClientBg) ||
+    normalizeString(params.get("themeBubbleClientBg"));
+  const themeBubbleClientText =
+    normalizeString(bootstrapConfig?.themeBubbleClientText) ||
+    normalizeString(params.get("themeBubbleClientText"));
+  const themeBubbleSupportBg =
+    normalizeString(bootstrapConfig?.themeBubbleSupportBg) ||
+    normalizeString(params.get("themeBubbleSupportBg"));
+  const themeBubbleSupportText =
+    normalizeString(bootstrapConfig?.themeBubbleSupportText) ||
+    normalizeString(params.get("themeBubbleSupportText"));
+  const themeBackground =
+    normalizeString(bootstrapConfig?.themeBackground) ||
+    normalizeString(params.get("themeBackground"));
+  const themeSurface =
+    normalizeString(bootstrapConfig?.themeSurface) ||
+    normalizeString(params.get("themeSurface"));
+  const themeHeaderColor =
+    normalizeString(bootstrapConfig?.themeHeaderColor) ||
+    normalizeString(params.get("themeHeaderColor"));
+  const backgroundOverride =
+    props.backgroundOverride || normalizeString(bootstrapConfig?.background);
 
   const visualProjectConfig =
-    props.themeOverride || themeParam ? undefined : projectConfig;
+    props.themeOverride || bootstrapTheme || themeParam
+      ? undefined
+      : projectConfig;
+
+  useEffect(() => {
+    if (!conversationId && seededConversationId) {
+      setConversationId(seededConversationId);
+    }
+  }, [conversationId, seededConversationId]);
+
+  useEffect(() => {
+    const nextTheme =
+      props.themeOverride || bootstrapTheme || themeParam || "neon-blue";
+    setThemeName(nextTheme);
+  }, [bootstrapTheme, props.themeOverride, themeParam]);
+
+  useEffect(() => {
+    if (!isBootstrapMode) {
+      return;
+    }
+
+    const handleBootstrapMessage = (event: MessageEvent) => {
+      if (parentOrigin !== "*" && event.origin !== parentOrigin) {
+        return;
+      }
+
+      const message =
+        event.data && typeof event.data === "object"
+          ? (event.data as Record<string, unknown>)
+          : null;
+      if (!message || message.type !== "webchat:bootstrap") {
+        return;
+      }
+
+      const incomingToken = normalizeString(message.bootstrapToken);
+      if (bootstrapToken && incomingToken !== bootstrapToken) {
+        return;
+      }
+
+      const payload = getBootstrapPayload(message.payload);
+      if (!payload) {
+        return;
+      }
+
+      setBootstrapConfig(payload);
+      setErrorText("");
+      setStatusText("");
+    };
+
+    setStatusText("Waiting for host...");
+    setErrorText("");
+    window.addEventListener("message", handleBootstrapMessage);
+
+    return () => {
+      window.removeEventListener("message", handleBootstrapMessage);
+    };
+  }, [bootstrapToken, isBootstrapMode, parentOrigin]);
 
   const tokensOverride = useMemo<Partial<AIChatThemeTokens>>(() => {
     const next: Partial<AIChatThemeTokens> = {};
@@ -256,11 +409,17 @@ export function ChatContainer(props: ChatContainerProps) {
   ]);
 
   useEffect(() => {
+    if (isBootstrapMode && !inputProjectId && !customerId) {
+      setErrorText("");
+      setStatusText("Waiting for host...");
+      return;
+    }
+
     if (!inputProjectId && !customerId) {
       setErrorText("Missing projectId or customerId query param.");
       setStatusText("");
     }
-  }, [customerId, inputProjectId]);
+  }, [customerId, inputProjectId, isBootstrapMode]);
 
   useEffect(() => {
     if (!inputProjectId && !customerId) return;
@@ -273,7 +432,9 @@ export function ChatContainer(props: ChatContainerProps) {
         const payload: Record<string, string> = {};
         if (inputProjectId) payload.projectId = inputProjectId;
         if (customerId) payload.customerId = customerId;
-        if (conversationId) payload.conversationId = conversationId;
+        if (conversationId || seededConversationId) {
+          payload.conversationId = conversationId || seededConversationId;
+        }
         if (signature) payload.signature = signature;
 
         const initRes = await fetch(`${apiBase}/api/webchat/init`, {
@@ -303,7 +464,7 @@ export function ChatContainer(props: ChatContainerProps) {
               projectId: initBody.projectId,
               conversationId: initBody.conversationId,
             },
-            "*",
+            parentOrigin,
           );
         }
 
@@ -382,7 +543,9 @@ export function ChatContainer(props: ChatContainerProps) {
     apiBase,
     customerId,
     inputProjectId,
+    parentOrigin,
     props.themeOverride,
+    seededConversationId,
     signature,
     storageKey,
     themeParam,
@@ -440,7 +603,7 @@ export function ChatContainer(props: ChatContainerProps) {
   };
 
   const appBackground =
-    props.backgroundOverride ||
+    backgroundOverride ||
     themeBackground ||
     visualProjectConfig?.backgroundColor ||
     AI_CHAT_THEMES[themeName].shellBg;
@@ -513,12 +676,13 @@ export function ChatContainer(props: ChatContainerProps) {
         statusText={statusText}
         errorText={errorText}
         theme={themeName}
-        layout={props.layoutOverride || layoutParam || "card"}
+        layout={props.layoutOverride || bootstrapLayout || layoutParam || "card"}
         tokensOverride={tokensOverride}
         title={titleOverride || projectConfig?.title}
         subtitle={subtitleOverride || projectConfig?.subtitle}
         welcomeText={welcomeOverride || projectConfig?.welcomeText}
         placeholder={placeholderOverride || projectConfig?.placeholder}
+        sendLabel={sendLabelOverride}
         avatar={props.avatarOverride || projectConfig?.widgetIcon || "💬"}
         fitViewport={shouldLockViewport}
       />
